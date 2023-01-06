@@ -1,0 +1,55 @@
+- hosts: 44.212.69.136
+  become: yes
+  tasks:
+  - name: Update all packages
+    yum:
+      name: "*"
+      state: latest
+      update_only: yes
+ 
+  - name: Ensure a list of yum packages are installed
+    yum:
+     name: "{{packages}}"
+     state: latest
+     update_cache: yes 
+    vars:
+      packages:
+      - python-pip
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - amazon-linux-extras  
+ 
+  - name: Add extras repository 
+    shell: yum-config-manager --enable extras
+
+  - name: Adding Docker Repository
+    yum_repository:
+      name: Docker
+      description: Docker Repo
+      baseurl: https://download.docker.com/linux/centos/7/x86_64/stable/
+      gpgcheck: no
+    
+  - name: Installing Docker Packages
+    shell: "amazon-linux-extras install docker=18.06.1 -y"
+
+
+  - name: Package Installer For Python3
+    package:
+      name: "python3"
+      state: present
+
+  - name: Installing python library for the Docker Remote API
+    pip:
+      name: "docker-py"
+
+  - name: Starting Docker Service
+    service:
+      name: "docker"
+      state: started 
+      enabled: yes      
+
+  - name: Installing Docker SDK for python3
+    command: pip3 install docker      
+ 
+
