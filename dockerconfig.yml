@@ -1,4 +1,4 @@
-- hosts: 44.212.69.136
+- hosts: 52.91.227.239
   become: yes
   tasks:
   - name: Update all packages
@@ -51,5 +51,37 @@
 
   - name: Installing Docker SDK for python3
     command: pip3 install docker      
- 
+  
+  - name: Pull a Docker Image
+    docker_image:
+          name: httpd
+          tag: latest
+          source: pull
+    register: z
 
+  - name:  Checking Pull Status
+    debug:
+       var: z
+          
+  - name: Creating a Persistence Volume Dir
+    file:
+      path: "/web"
+      state: directory
+
+  - name: Copying the HTML code in the Directory
+    copy: 
+     src: "index.html"
+     dest: "/web"
+
+  - name: Launching an HTTPD Container
+    when: z.failed == false
+    docker_container:
+       name: apache-server
+       image: httpd
+       state: started
+       exposed_ports:
+         - "80"
+       ports:
+         - "8888:80"
+       volumes: 
+         - /web:/usr/local/apache2/htdocs
